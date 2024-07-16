@@ -1,7 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chat_models import ChatOpenAI
@@ -20,12 +20,12 @@ def get_pdf_text(pdf_docs):
 
 
 def get_text_chunks(text):
-    text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len
-    )
+    text_splitter = RecursiveCharacterTextSplitter(
+    separators=['\n\n', '\n', ' ', ''],
+    chunk_size=1000,
+    chunk_overlap=200,
+    length_function=len
+)
     chunks = text_splitter.split_text(text)
     return chunks
 
@@ -38,7 +38,7 @@ def get_vectorstore(text_chunks):
 
 
 def get_conversation_chain(vectorstore):
-    llm = ChatOpenAI()
+    llm = OpenAI(max_tokens=256,n=1,temperature=0,top_p=1.0,frequency_penalty=0.5,presence_penalty=0.5,best_of=2,model='text-davinci-003')
     # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
 
     memory = ConversationBufferMemory(
